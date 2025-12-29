@@ -17,10 +17,11 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
         with:
-          gradle-version: 8.1.1 # این خط دهن نسخه ۹ رو می‌بنده!
+          gradle-version: 8.1.1
 
-      - name: Build APK
-        run: gradle assembleDebug --no-daemon
+      - name: Clean and Build APK
+        # دستور clean تمام کش‌های خراب قبلی را پاک می‌کند
+        run: gradle clean assembleDebug --no-daemon
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
