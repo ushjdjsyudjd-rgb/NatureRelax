@@ -15,8 +15,10 @@ jobs:
           distribution: 'temurin'
 
       - name: Build with Gradle
-        # این دستور بدون نیاز به فایل gradlew کار می‌کنه
-        run: gradle assembleDebug --no-daemon
+        # ابتدا اجازه اجرا به فایل می‌دهیم، سپس آن را اجرا می‌کنیم
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
