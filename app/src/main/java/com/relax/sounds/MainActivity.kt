@@ -6,6 +6,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.*
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -14,11 +15,6 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.SkipNext
-import androidx.compose.material.icons.filled.SkipPrevious
-import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -28,6 +24,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
@@ -115,7 +112,7 @@ class MainActivity : ComponentActivity() {
         }
 
         LaunchedEffect(sleepTimer) {
-            if (sleepTimer > 0 && isPlaying) { // فقط در صورت پخش بودن موزیک تایمر کار کند
+            if (sleepTimer > 0 && isPlaying) {
                 delay(sleepTimer * 60000L)
                 mediaPlayer?.pause()
                 isPlaying = false
@@ -124,7 +121,7 @@ class MainActivity : ComponentActivity() {
         }
 
         Box(modifier = Modifier.fillMaxSize().background(bgGradient)) {
-            // نوار زمان عمودی و تایمر دیجیتال در سمت راست
+            // نوار زمان عمودی سمت راست
             Column(
                 modifier = Modifier.align(Alignment.TopEnd).padding(top = 80.dp, end = 10.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
@@ -176,51 +173,54 @@ class MainActivity : ComponentActivity() {
 
                 Spacer(modifier = Modifier.height(60.dp))
 
-                // باکس شیشه‌ای کنترلر با آیکون‌های استاندارد و افکت ریپل
+                // باکس کنترلر شیشه‌ای با افکت ریپل
                 Row(
                     modifier = Modifier.fillMaxWidth().height(85.dp).clip(RoundedCornerShape(42.dp))
                         .background(Color.White.copy(0.12f)).border(1.dp, Color.White.copy(0.15f), RoundedCornerShape(42.dp)),
                     horizontalArrangement = Arrangement.SpaceEvenly,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    IconButton(onClick = { playTrack(currentIndex - 1) }) {
-                        Icon(Icons.Filled.SkipPrevious, contentDescription = "Previous", tint = Color.White, modifier = Modifier.size(35.dp))
+                    // دکمه عقب
+                    Box(modifier = Modifier.size(50.dp).clip(CircleShape).clickable { playTrack(currentIndex - 1) }, contentAlignment = Alignment.Center) {
+                        Text("⏮", color = Color.White, fontSize = 28.sp)
                     }
                     
-                    IconButton(onClick = {
-                        if (isPlaying) mediaPlayer?.pause() else {
-                            if (mediaPlayer == null) playTrack(currentIndex) else mediaPlayer?.start()
-                        }
-                        isPlaying = !isPlaying
-                    }) {
-                        Icon(if (isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow, contentDescription = "Play/Pause", tint = Color.White, modifier = Modifier.size(50.dp))
+                    // دکمه پخش/توقف
+                    Box(modifier = Modifier.size(65.dp).clip(CircleShape).background(Color.White.copy(0.1f))
+                        .clickable { 
+                            if (isPlaying) mediaPlayer?.pause() else {
+                                if (mediaPlayer == null) playTrack(currentIndex) else mediaPlayer?.start()
+                            }
+                            isPlaying = !isPlaying
+                        }, contentAlignment = Alignment.Center) {
+                        Text(if (isPlaying) "⏸" else "▶", color = Color.White, fontSize = 34.sp)
                     }
 
-                    IconButton(onClick = { playTrack(currentIndex + 1) }) {
-                        Icon(Icons.Filled.SkipNext, contentDescription = "Next", tint = Color.White, modifier = Modifier.size(35.dp))
+                    // دکمه جلو
+                    Box(modifier = Modifier.size(50.dp).clip(CircleShape).clickable { playTrack(currentIndex + 1) }, contentAlignment = Alignment.Center) {
+                        Text("⏭", color = Color.White, fontSize = 28.sp)
                     }
                 }
 
                 Spacer(modifier = Modifier.height(30.dp))
 
-                // دکمه تایمر خواب با ظاهر شیشه‌ای نارنجی و افکت ریپل
+                // دکمه تایمر خواب با ظاهر شیشه‌ای نارنجی
                 Surface(
                     onClick = { if (sleepTimer < 60) sleepTimer += 10 else sleepTimer = 0 },
-                    color = Color(0xFFFFB347).copy(alpha = 0.6f), // نارنجی شیشه‌ای
+                    color = Color(0xFFFFB347).copy(alpha = 0.6f),
                     shape = RoundedCornerShape(25.dp),
                     border = BorderStroke(1.dp, Color.White.copy(0.4f)),
-                    modifier = Modifier.fillMaxWidth(0.6f) // کمی پهن تر برای خوانایی
+                    modifier = Modifier.fillMaxWidth(0.7f)
                 ) {
                     Text(
-                        "Sleep Timer: ${if(sleepTimer > 0) "$sleepTimer min" else "Off"}",
+                        text = "Sleep Timer: ${if(sleepTimer > 0) "$sleepTimer min" else "Off"}",
                         color = Color.White,
                         fontWeight = FontWeight.Bold,
-                        fontSize = 14.sp,
-                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp),
-                        textAlign = Alignment.CenterHorizontally.align(this, this.layoutDirection)
+                        fontSize = 15.sp,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(vertical = 12.dp, horizontal = 8.dp)
                     )
                 }
-
 
                 Spacer(modifier = Modifier.weight(1f))
                 Text("Developed by HsH. © Copyright", modifier = Modifier.padding(bottom = 20.dp), color = Color.White.copy(0.3f), fontSize = 11.sp)
@@ -231,7 +231,7 @@ class MainActivity : ComponentActivity() {
     private fun formatTime(ms: Int): String {
         val totalSec = ms / 1000
         val min = totalSec / 60
-        val sec = totalSec / 1000 % 60 // اصلاح محاسبه ثانیه
+        val sec = totalSec % 60
         return String.format("%02d:%02d", min, sec)
     }
 
