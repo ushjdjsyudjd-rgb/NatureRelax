@@ -15,10 +15,8 @@ jobs:
           distribution: 'temurin'
 
       - name: Build with Gradle
-        # استفاده از دستور مستقیم برای جلوگیری از تداخل نسخه ها
-        run: |
-          chmod +x gradlew
-          gradle assembleDebug --no-daemon
+        # این دستور بدون نیاز به فایل gradlew کار می‌کنه
+        run: gradle assembleDebug --no-daemon
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
