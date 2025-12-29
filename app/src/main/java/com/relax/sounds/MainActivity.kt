@@ -5,36 +5,54 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.animation.Crossfade
-import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.scale
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
 
+data class Track(val name: String, val resId: Int)
+
 class MainActivity : ComponentActivity() {
     private var mediaPlayer: MediaPlayer? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
+        // لیست کامل ۱۰ آهنگ شما بر اساس پیام آخر
+        val trackList = listOf(
+            Track("Dark Heart", R.raw.dark_heart),
+            Track("Sentimental", R.raw.sentimental),
+            Track("Harmony", R.raw.harmony),
+            Track("Careful", R.raw.careful),
+            Track("Worlds", R.raw.worlds),
+            Track("Pure Dream", R.raw.pure_dream),
+            Track("For You", R.raw.for_you),
+            Track("Thoughtful", R.raw.thoughtful),
+            Track("Bread", R.raw.bread),
+            Track("Enlivening", R.raw.enlivening)
+        )
+
         setContent {
             var showSplash by remember { mutableStateOf(true) }
-            LaunchedEffect(Unit) {
-                delay(2000)
-                showSplash = false
-            }
+            LaunchedEffect(Unit) { delay(2000); showSplash = false }
 
             MaterialTheme {
                 Crossfade(targetState = showSplash) { isSplash ->
-                    if (isSplash) SplashScreen() else MainPlayerScreen()
+                    if (isSplash) SplashScreen() else MainPlayerScreen(trackList)
                 }
             }
         }
@@ -42,137 +60,138 @@ class MainActivity : ComponentActivity() {
 
     @Composable
     fun SplashScreen() {
-        Box(modifier = Modifier.fillMaxSize().background(Color(0xFF121212)), contentAlignment = Alignment.Center) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text("Nature Relax", color = Color.White, fontSize = 32.sp, fontWeight = FontWeight.Bold)
-                Spacer(modifier = Modifier.height(16.dp))
-                CircularProgressIndicator(color = Color(0xFF4CAF50))
-            }
-            Text("Created by HsH © 2025", modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 32.dp), color = Color.Gray, fontSize = 12.sp)
+        Box(modifier = Modifier.fillMaxSize().background(Color(0xFF185A9D)), contentAlignment = Alignment.Center) {
+            Text("Nature Relax", color = Color.White, fontSize = 32.sp, fontWeight = FontWeight.Bold)
         }
     }
 
     @Composable
-    fun MainPlayerScreen() {
+    fun MainPlayerScreen(tracks: List<Track>) {
+        var currentTrack by remember { mutableStateOf(tracks[0]) }
         var isPlaying by remember { mutableStateOf(false) }
-        var currentPosition by remember { mutableStateOf(0f) }
-        var totalDuration by remember { mutableStateOf(1f) }
-        var sleepTimerMinutes by remember { mutableStateOf(0) } // تایمر خواب
+        var currentPos by remember { mutableStateOf(0) }
+        var sleepTimer by remember { mutableStateOf(0) }
 
-        // انیمیشن ضربان (Pulse)
-        val infiniteTransition = rememberInfiniteTransition()
-        val scale by infiniteTransition.animateFloat(
-            initialValue = 1f,
-            targetValue = if (isPlaying) 1.15f else 1f,
-            animationSpec = infiniteRepeatable(
-                animation = TweenSpec(durationMillis = 1500, easing = FastOutSlowInEasing),
-                repeatMode = RepeatMode.Reverse
-            )
+        val bgGradient = Brush.verticalGradient(
+            colors = listOf(Color(0xFF43CEA2), Color(0xFF185A9D), Color(0xFF6A11CB))
         )
 
-        // آپدیت ثانیه‌شمار و مدیریت تایمر خواب
-        LaunchedEffect(isPlaying) {
+        LaunchedEffect(isPlaying, currentTrack) {
             while (isPlaying) {
-                mediaPlayer?.let {
-                    currentPosition = it.currentPosition.toFloat()
-                    totalDuration = it.duration.toFloat()
-                }
+                currentPos = mediaPlayer?.currentPosition ?: 0
                 delay(1000)
             }
         }
 
-        // منطق شمارش معکوس تایمر خواب
-        LaunchedEffect(sleepTimerMinutes) {
-            if (sleepTimerMinutes > 0 && isPlaying) {
-                while (sleepTimerMinutes > 0 && isPlaying) {
-                    delay(60000) // هر یک دقیقه
-                    sleepTimerMinutes -= 1
-                    if (sleepTimerMinutes == 0) {
-                        mediaPlayer?.pause()
-                        isPlaying = false
-                    }
+        // منطق تایمر خواب
+        LaunchedEffect(sleepTimer) {
+            if (sleepTimer > 0) {
+                delay(sleepTimer * 60000L)
+                if (isPlaying) {
+                    mediaPlayer?.pause()
+                    isPlaying = false
+                    sleepTimer = 0
                 }
             }
         }
 
         Column(
-            modifier = Modifier.fillMaxSize().background(Color(0xFF1E272E)).padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+            modifier = Modifier.fillMaxSize().background(bgGradient).padding(horizontal = 20.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // کارت نمایش با انیمیشن ضربان
-            Card(
-                modifier = Modifier.size(220.dp).scale(scale),
-                shape = RoundedCornerShape(110.dp), // دایره‌ای کامل
-                colors = CardDefaults.cardColors(containerColor = Color(0xFF2F3640))
-            ) {
-                Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-                    Text(if (isPlaying) "🌧️" else "💤", fontSize = 70.sp)
-                }
-            }
-
             Spacer(modifier = Modifier.height(50.dp))
-
-            // نمایش تایمر و نوار پیشرفت
-            Text(formatTime(currentPosition.toInt()), color = Color.White, fontSize = 16.sp)
-            LinearProgressIndicator(
-                progress = currentPosition / totalDuration,
-                modifier = Modifier.fillMaxWidth().height(6.dp).padding(horizontal = 40.dp),
-                color = Color(0xFF4CAF50),
-                trackColor = Color.DarkGray
-            )
+            
+            // بخش لوگو (Logoor)
+            Box(modifier = Modifier.size(70.dp).clip(CircleShape).background(Color.White.copy(0.2f)), contentAlignment = Alignment.Center) {
+                Text("🌿", fontSize = 35.sp)
+            }
+            Text("Logoor", color = Color.White, fontSize = 16.sp)
 
             Spacer(modifier = Modifier.height(30.dp))
 
-            // دکمه کنترل صدا
-            Button(
-                onClick = {
-                    if (isPlaying) mediaPlayer?.pause() else {
+            // متن‌های استایل عکس
+            Column(modifier = Modifier.fillMaxWidth().padding(start = 20.dp)) {
+                Text("Relax.", color = Color(0xFFFFB347), fontSize = 42.sp, fontWeight = FontWeight.Bold)
+                Text("Breathe.", color = Color.White, fontSize = 42.sp, fontWeight = FontWeight.Bold)
+                Text("Listen.", color = Color.White, fontSize = 42.sp, fontWeight = FontWeight.Bold)
+            }
+
+            Spacer(modifier = Modifier.height(30.dp))
+
+            // لیست افقی آهنگ‌ها (LazyRow)
+            Text("Select Sound:", color = Color.White.copy(0.7f), fontSize = 14.sp, modifier = Modifier.align(Alignment.Start).padding(start = 20.dp))
+            Spacer(modifier = Modifier.height(10.dp))
+            LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp), contentPadding = PaddingValues(horizontal = 10.dp)) {
+                items(tracks) { track ->
+                    Surface(
+                        onClick = {
+                            mediaPlayer?.stop()
+                            mediaPlayer?.release()
+                            mediaPlayer = MediaPlayer.create(this@MainActivity, track.resId)
+                            mediaPlayer?.isLooping = true
+                            currentTrack = track
+                            mediaPlayer?.start()
+                            isPlaying = true
+                        },
+                        color = if (currentTrack == track) Color.White.copy(0.4f) else Color.White.copy(0.1f),
+                        shape = RoundedCornerShape(20.dp)
+                    ) {
+                        Text(track.name, modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp), color = Color.White, fontSize = 14.sp)
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(40.dp))
+
+            // کنترلر شیشه‌ای اصلی (Play/Pause)
+            Row(
+                modifier = Modifier.fillMaxWidth().height(90.dp).clip(RoundedCornerShape(45.dp))
+                    .background(Color.White.copy(0.15f)).border(1.dp, Color.White.copy(0.2f), RoundedCornerShape(45.dp)),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text("⏮", color = Color.White, fontSize = 30.sp)
+                IconButton(onClick = {
+                    if (isPlaying) {
+                        mediaPlayer?.pause()
+                    } else {
                         if (mediaPlayer == null) {
-                            mediaPlayer = MediaPlayer.create(this@MainActivity, R.raw.rain)
+                            mediaPlayer = MediaPlayer.create(this@MainActivity, currentTrack.resId)
                             mediaPlayer?.isLooping = true
                         }
                         mediaPlayer?.start()
                     }
                     isPlaying = !isPlaying
-                },
-                modifier = Modifier.fillMaxWidth(0.5f).height(55.dp),
-                shape = RoundedCornerShape(25.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50))
-            ) {
-                Text(if (isPlaying) "Stop" else "Play Rain")
+                }) {
+                    Text(if (isPlaying) "⏸" else "▶️", color = Color.White, fontSize = 45.sp)
+                }
+                Text("⏭", color = Color.White, fontSize = 30.sp)
             }
 
             Spacer(modifier = Modifier.height(20.dp))
+            
+            // وضعیت پخش و تایمر
+            Text("Playing: ${currentTrack.name}", color = Color.White, fontWeight = FontWeight.Medium)
+            Text("${formatTime(currentPos)} / Sleep Timer: ${if(sleepTimer > 0) "$sleepTimer min" else "Off"}", color = Color.White.copy(0.6f))
 
-            // دکمه تایمر خواب
-            OutlinedButton(
-                onClick = { if (sleepTimerMinutes < 60) sleepTimerMinutes += 10 else sleepTimerMinutes = 0 },
-                modifier = Modifier.fillMaxWidth(0.5f),
-                shape = RoundedCornerShape(25.dp),
-                border = ButtonDefaults.outlinedButtonBorder.copy(brush = androidx.compose.ui.graphics.SolidColor(Color.Gray))
-            ) {
-                Text(
-                    if (sleepTimerMinutes > 0) "Timer: $sleepTimerMinutes min" else "Set Sleep Timer",
-                    color = Color.White,
-                    fontSize = 12.sp
-                )
+            // دکمه تنظیم تایمر خواب
+            TextButton(onClick = { if (sleepTimer < 60) sleepTimer += 10 else sleepTimer = 0 }) {
+                Text("Set Sleep Timer (+10m)", color = Color(0xFFFFB347))
             }
 
             Spacer(modifier = Modifier.weight(1f))
-            Text("HsH Copyright Reserved", color = Color(0xFF57606f), fontSize = 10.sp)
+            Text("Developed by HsH. © Copyright", modifier = Modifier.padding(bottom = 20.dp), color = Color.White.copy(0.5f), fontSize = 12.sp)
         }
     }
 
-    private fun formatTime(milliseconds: Int): String {
-        val seconds = (milliseconds / 1000) % 60
-        val minutes = (milliseconds / (1000 * 60)) % 60
-        return String.format("%02d:%02d", minutes, seconds)
+    private fun formatTime(ms: Int): String {
+        val sec = (ms / 1000) % 60
+        val min = (ms / (1000 * 60)) % 60
+        return String.format("%02d:%02d", min, sec)
     }
 
     override fun onDestroy() {
         super.onDestroy()
         mediaPlayer?.release()
-        mediaPlayer = null
     }
 }
