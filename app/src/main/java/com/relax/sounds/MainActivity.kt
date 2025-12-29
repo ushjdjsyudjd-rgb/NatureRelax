@@ -121,6 +121,7 @@ class MainActivity : ComponentActivity() {
         }
 
         Box(modifier = Modifier.fillMaxSize().background(bgGradient)) {
+            // نوار زمان عمودی سمت راست
             Column(
                 modifier = Modifier.align(Alignment.TopEnd).padding(top = 80.dp, end = 10.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
@@ -172,33 +173,43 @@ class MainActivity : ComponentActivity() {
 
                 Spacer(modifier = Modifier.height(60.dp))
 
-                // بخش اصلاح شده کنترلر
+                // باکس کنترلر (اصلاح شده)
                 Row(
                     modifier = Modifier.fillMaxWidth().height(85.dp).clip(RoundedCornerShape(42.dp))
                         .background(Color.White.copy(0.12f)).border(1.dp, Color.White.copy(0.15f), RoundedCornerShape(42.dp)),
                     horizontalArrangement = Arrangement.SpaceEvenly,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
+                    // عقب
                     Box(modifier = Modifier.size(50.dp).clip(CircleShape).clickable { playTrack(currentIndex - 1) }, contentAlignment = Alignment.Center) {
                         Text("⏮", color = Color.White, fontSize = 28.sp)
                     }
                     
-                    Box(modifier = Modifier.size(65.dp).clip(CircleShape).background(Color.White.copy(0.15f))
-                        .clickable { 
-                            if (mediaPlayer == null) {
-                                playTrack(currentIndex)
-                            } else {
-                                if (isPlaying) {
-                                    mediaPlayer?.pause()
+                    // دکمه وسط (فقط شیشه‌ای بدون رنگ نارنجی)
+                    Box(
+                        modifier = Modifier
+                            .size(65.dp)
+                            .clip(CircleShape)
+                            .background(Color.White.copy(0.15f)) // رنگ شیشه‌ای ثابت
+                            .clickable { 
+                                if (mediaPlayer == null) {
+                                    playTrack(currentIndex)
                                 } else {
-                                    mediaPlayer?.start()
+                                    if (isPlaying) {
+                                        mediaPlayer?.pause()
+                                        isPlaying = false
+                                    } else {
+                                        mediaPlayer?.start()
+                                        isPlaying = true
+                                    }
                                 }
-                            }
-                            isPlaying = !isPlaying // تغییر وضعیت آیکون بلافاصله در کلیک اول
-                        }, contentAlignment = Alignment.Center) {
+                            }, 
+                        contentAlignment = Alignment.Center
+                    ) {
                         Text(if (isPlaying) "⏸" else "▶", color = Color.White, fontSize = 34.sp)
                     }
 
+                    // جلو
                     Box(modifier = Modifier.size(50.dp).clip(CircleShape).clickable { playTrack(currentIndex + 1) }, contentAlignment = Alignment.Center) {
                         Text("⏭", color = Color.White, fontSize = 28.sp)
                     }
@@ -206,6 +217,7 @@ class MainActivity : ComponentActivity() {
 
                 Spacer(modifier = Modifier.height(30.dp))
 
+                // دکمه تایمر خواب
                 Surface(
                     onClick = { if (sleepTimer < 60) sleepTimer += 10 else sleepTimer = 0 },
                     color = Color(0xFFFFB347).copy(alpha = 0.6f),
