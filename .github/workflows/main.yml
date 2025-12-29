@@ -14,14 +14,13 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v3
+      - name: Build with Gradle
+        # استفاده از دستور مستقیم برای جلوگیری از تداخل نسخه ها
+        run: |
+          chmod +x gradlew
+          gradle assembleDebug --no-daemon
 
-      - name: Build APK
-        # این دستور مستقیماً گریدل را اجرا می‌کند تا APK ساخته شود
-        run: gradle assembleDebug
-
-      - name: Upload APK Artifact
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: NatureRelax-APK
